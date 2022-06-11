@@ -1,0 +1,43 @@
+POST http://localhost:8000/decrypt-text
+token: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdHVkZW50SUQiOiI2MmExZTk4YzdlMzhhZDQ2M2RjYTVmMmQiLCJlbWFpbCI6Im1mcmVrZS52aWN0b3JAZ21haWwuY29tIn0.Rt7Aw9K4FKdfvyWHk2relrol7yRr1_PWGvWuLJF82bM
+Content-Type: application/json
+f5key: 1,454,4567,787,89,789
+textToHide: Aa8rF2PKCbnIBGbIvDGRFN-IrOhJ8Gqe3e2gPADkGRMiA0c7ke0T0N7D2wYL35If4_O9OE5EwWYp6H8glUyov7Emgw_-GLkiMU--CJ_vUalwkyjiVsDxoojh-h2D1uuPB1gpgzpmu77PZHbcaJ1eCan8K6zKEEE6WZkvKTG_QYo=
+
+
+{
+    "ciphertext": "Aa8rF2PKCbnIBGbIvDGRFN-IrOhJ8Gqe3e2gPADkGRMiA0c7ke0T0N7D2wYL35If4_O9OE5EwWYp6H8glUyov7Emgw_-GLkiMU--CJ_vUalwkyjiVsDxoojh-h2D1uuPB1gpgzpmu77PZHbcaJ1eCan8K6zKEEE6WZkvKTG_QYo=",
+    "decryptionKey": "-----BEGIN RSA PRIVATE KEY-----\nMIICXwIBAAKBgQClaFIHM0uEODAlH0dVR6CXnOcbBIiL3CJMKgz1Oseq3yPqdzbi\nRv+hLExdNZCvIuPDn/WS7S87A7WqnfD40/reR5iJIOXHV72zDw8LziwO7Q6lx+Jh\nicBogTm81wU7IRpRdSpnhTX/U2l40C7VZelRfAVgM43vko/B/+b8ilJNqQIDAQAB\nAoGAJTg7NQmS1Za7Jq9KIuNyPIt+6XJ0s1v+j7rqnYfzg/ygHVNkEzi8ruzD5jl2\nbCJitBNbdAtRFGt6RoExlA+0M2LvsUUA+CtTtvUHnuXuymLiJyQBghTDryuFnGNU\ncJPaWahpzlymLyGwKkBx1qybnlgnVfe3vL3fHzfrWSrzDG0CRQDi3Ql7vrcRPxlQ\nT6HyDebuzjmO2snZnTKL2EfuXPEQQJGIvyR0bRvTIu/Iut53lQqe1yzRjvpYk/MU\nqVP3PLTqWfDVKwI9ALqmshOxtxvKEGRfcPSLWABLWdgYG/j2CV/kKh3DkboPb+07\ngsTh3obzoQukb9W3fcJSk556oWd8DyamewJELupJGMci8rUa1gnx0q3fUQliy9Eh\nJxikKFls3rVnwNWpgx8MOeuKcopqDhffA9nVnW2gPiIUUZcfEOnHjHyIaWJ6NIsC\nPFNDFz8n0MoJuoQ7+xRrsIb5FgwKvTey8X2gN5Vtb21zg3dtS6luJKlItveNlAHf\nR69OzOEuTR/vvIZ+TwJEdbM6CR/FsSqKmFwGTKvMbtOUdYgWiS4Ios9l54aPvCwm\npWZdbuOvx4jrNw0h8BCK+wTe1jeL9oR2LTJlLAvi2Wi7Hxw=\n-----END RSA PRIVATE KEY-----\n"
+}
+
+# {
+#     "file": "../original.png"
+# }
+
+
+# My Public Key
+# "-----BEGIN RSA PUBLIC KEY-----\nMIGJAoGBAKVoUgczS4Q4MCUfR1VHoJec5xsEiIvcIkwqDPU6x6rfI+p3NuJG/6Es\nTF01kK8i48Of9ZLtLzsDtaqd8PjT+t5HmIkg5cdXvbMPDwvOLA7tDqXH4mGJwGiB\nObzXBTshGlF1KmeFNf9TaXjQLtVl6VF8BWAzje+Sj8H/5vyKUk2pAgMBAAE=\n-----END RSA PUBLIC KEY-----\n"
+
+# Cyher Text
+# "Aa8rF2PKCbnIBGbIvDGRFN-IrOhJ8Gqe3e2gPADkGRMiA0c7ke0T0N7D2wYL35If4_O9OE5EwWYp6H8glUyov7Emgw_-GLkiMU--CJ_vUalwkyjiVsDxoojh-h2D1uuPB1gpgzpmu77PZHbcaJ1eCan8K6zKEEE6WZkvKTG_QYo="
+
+
+# {
+#     "ciphertext": "cYRS8DIHjW5RM_7RexIOY-oGOq4KGvEyR4Ea9vY6a9IJKqp3uTOPlbK2_XK2cBWiCQK6fkvBDtKmnwXotsB25EfmulZxL1sQpIIy9MVAzC7LoLM9kYnCJ6vVat76GdAoGF-qbiyBlMlgWqHFxLczuwU4DZS3mGTM4Xgev16u3cE=",
+#     "decryptionKey": "-----BEGIN RSA PRIVATE KEY-----\nMIICYAIBAAKBgQCTx3FL3bmpPYBzmDdp46Xl91BmrJheNYcOKh0QzdIxghTd5rRE\nhDvEQSBxrIbUGAxom9FsAxmMig7nN0aH4Gk3h2tZOAjXB4eQVbCBM1S0AtAgsBfq\njndW6LsQr/9IUfw9dKI7rVV+E5/+m3hJEgwDXeZUD5kEEh90aQpkHvDpswIDAQAB\nAoGAHhLTaqYHt3pNnriWZlUumLsYwJxVMa7g+i/11EqegPbA+luNyffDFfBPAvMi\nSR1PwSYcm0eSNniOCd3Et4bohMXs1ZzGnz18pW2l7P4agHROdRgOgDqngMeamEyD\nbsP53TIwl9yv1x4gbTYTIgQUx6dQM1AdkTubqlEv7T/PO5ECRQCx1+0SUjMspylx\nsZDF39iCkWyjDRCtwU+FsWLWZMJbPm4jC1i1kRfBy2u1o8gbmk7raxdRpHSXPvIF\nYoQjB7q7PjTjqQI9ANS5KDS73d9QkvuTmlgioaC2iL5d8ZrFi8D0TWcGl5dpj8P5\nHYahBczTisNA9CAXI6v6ky5okfcRUkf7+wJFAI0SLRoFXlajWvq20ZJE2CfqV3SX\nXo2V9BCm/zH1xz49rXva+kk8iM3PIOd6vbc3ljakQmEexOVcpvqihRKMhREWbTnR\nAjxTP+MsQBmku7PKIQnWVDdM3iLF3Z4gJA99hB6Go13QM8+/sk6L0ZijgGZd452m\nsWeUdowDLYlyV6UL5uECRFFnq6PwoUnK3ns704pkGwkCLYdpuVct8mocUBcNzTWx\n/9/2Eto/gvmhrotZhoSWakgUfDo4utscX4VNdFembWm/fOrh\n-----END RSA PRIVATE KEY-----\n"
+# }
+
+# {
+#     "keyLength": "1024",
+#     "PKReceiversEmail": "victorp3tr@gmail.com"
+# }
+
+# {
+#     "text": "Hello Everyone",
+#     "encryptionKey": "-----BEGIN RSA PUBLIC KEY-----\nMIGJAoGBAJPHcUvduak9gHOYN2njpeX3UGasmF41hw4qHRDN0jGCFN3mtESEO8RB\nIHGshtQYDGib0WwDGYyKDuc3RofgaTeHa1k4CNcHh5BVsIEzVLQC0CCwF+qOd1bo\nuxCv/0hR/D10ojutVX4Tn/6beEkSDANd5lQPmQQSH3RpCmQe8OmzAgMBAAE=\n-----END RSA PUBLIC KEY-----\n"
+# }
+
+# {
+#     "email": "mfreke.victor@gmail.com",
+#     "password": "1234"
+# }
