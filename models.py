@@ -57,7 +57,6 @@ class StudentModelReply(BaseModel):
     id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
     username: str = Field(...)
     email: EmailStr = Field(...)
-    gender: str = Field(...)
     token: str = Field(...)
 
     class Config:

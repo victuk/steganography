@@ -14,12 +14,25 @@ import base64
 from sendEmail import sendMail, sendMailTwo, sendMailWithAttachment
 from checkLogin import check
 from main import encode_enc, modPix
+from fastapi.middleware.cors import CORSMiddleware
 
 jwtSecret = '1592e2945cc2e8153171e692c44ceeffd98128be9a79b2d6'
 mongUrl = 'mongodb://localhost:27017/'
 # os.environ["MONGODB_URL"]
 
 app = FastAPI()
+
+origins = [
+    "*"
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 client = motor.motor_asyncio.AsyncIOMotorClient(mongUrl)
 db = client.steg
@@ -39,7 +52,7 @@ async def create_student(student: StudentModel = Body(...)):
         new_student = await db["students"].insert_one(student)
         created_student = await db["students"].find_one({"_id": new_student.inserted_id})
         print(new_student.inserted_id)
-        return JSONResponse(status_code=status.HTTP_201_CREATED, content={'created_student':created_student})
+        return JSONResponse(status_code=status.HTTP_201_CREATED, content={'created_student':{'_id':created_student['_id'],'email': created_student['email'], 'username': created_student['username']}, 'status': 'successful'})
         
 
 @app.post("/login", response_description="Logs In new student", response_model=StudentModelReply)
@@ -53,7 +66,7 @@ async def create_student(student: LoginModel = Body(...)):
             print('Passwords match')
             token = jwt.encode({'studentID':studentD['_id'], 'email':studentD['email']}, jwtSecret, algorithm="HS256")
             print(token.decode())
-            return {'_id': studentD['_id'], 'username': studentD['username'], 'email': studentD['email'], 'gender': studentD['gender'], 'token':token.decode()}
+            return {'_id': studentD['_id'], 'username': studentD['username'], 'email': studentD['email'], 'token':token.decode()}
         else:
             raise HTTPException(status_code=404, detail=f"Login details not correct")
     else:
