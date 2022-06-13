@@ -22,13 +22,9 @@ mongUrl = 'mongodb://localhost:27017/'
 
 app = FastAPI()
 
-origins = [
-    "*"
-]
-
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -139,18 +135,19 @@ async def list_students(token: Union[str, None] = Header(default=None), enc: Enc
 
 
 @app.post(
-    "/decrypt-text", response_description="Encrypts text", response_model=DecryptedText
+    "/decrypt-text", response_description="Decrypts text", response_model=DecryptedText
 )
-async def list_students(token: Union[str, None] = Header(default=None), dec: Decrypt = Body(...)):
+async def list_students(token: Union[str, None] = Header(default=None), decryptionKey: Union[str, None] = Header(default=None), dec: Decrypt = Body(...)):
     # payload = jwt.decode(token, jwtSecret, algorithms="HS256")
     # print(payload) .decode('utf-8')
     result = check(token)
     if result is not None:
         dec = jsonable_encoder(dec)
+        
+        privateKey = rsa.PrivateKey.load_pkcs1(decryptionKey)
 
-        publicKey = rsa.PrivateKey.load_pkcs1(dec['decryptionKey'])
         binText = base64.urlsafe_b64decode(dec['ciphertext'])
-        decodedVal = rsa.decrypt(binText, publicKey)
+        decodedVal = rsa.decrypt(binText, privateKey)
         decodedString = decodedVal.decode('utf-8')
         return {'plaintext': decodedString}
     else:

@@ -154,7 +154,6 @@ class EncryptedText(BaseModel):
 
 class Decrypt(BaseModel):
     ciphertext: str = Field(...)
-    decryptionKey: bytes = Field(...)
 
     class Config:
         allow_population_by_field_name = True

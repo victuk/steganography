@@ -29,7 +29,7 @@ db = client.steg
 
 
 
-@app.post("/register", response_description="Add new student", response_model=StudentModel)
+@app.post("/register", response_description="Add new student", status_code=201, response_model=StudentModel)
 async def create_student(student: StudentModel = Body(...)):
     student = jsonable_encoder(student)
     studentS = await db["students"].find_one({"email": student["email"]})
@@ -43,7 +43,7 @@ async def create_student(student: StudentModel = Body(...)):
         return JSONResponse(status_code=status.HTTP_201_CREATED, content={'created_student':created_student})
         
 
-@app.post("/login", response_description="Logs In new student", response_model=StudentModelReply)
+@app.post("/login", response_description="Logs In new student", status_code=200, response_model=StudentModelReply)
 async def create_student(student: LoginModel = Body(...)):
     student = jsonable_encoder(student)
     studentD = await db["students"].find_one({"email": student['email']})
