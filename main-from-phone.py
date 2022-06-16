@@ -1,3 +1,4 @@
+import json
 import os
 from fastapi import FastAPI, Body, HTTPException, status, Header, UploadFile, File, Form
 from fastapi.responses import JSONResponse
@@ -15,6 +16,7 @@ from sendEmail import sendMail, sendMailTwo, sendMailWithAttachment
 from checkLogin import check
 from main import encode_enc, modPix
 from fastapi.middleware.cors import CORSMiddleware
+from sys import stdout
 
 jwtSecret = '1592e2945cc2e8153171e692c44ceeffd98128be9a79b2d6'
 mongUrl = 'mongodb://localhost:27017/'
@@ -22,12 +24,17 @@ mongUrl = 'mongodb://localhost:27017/'
 
 app = FastAPI()
 
+origins = [
+    "*",
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"]
 )
 
 client = motor.motor_asyncio.AsyncIOMotorClient(mongUrl)
@@ -117,17 +124,18 @@ async def generate_keys(token: Union[str, None] = Header(default=None), keyLengt
 @app.post(
     "/encrypt-text", response_description="Encrypts text", response_model=EncryptedText
 )
-async def list_students(token: Union[str, None] = Header(default=None), enc: Encrypt = Body(...)):
+async def list_students(text: Union[str, None] = Header(default=None), encryptionKey: Union[str, None] = Header(default=None), token: Union[str, None] = Header(default=None)):
     # payload = jwt.decode(token, jwtSecret, algorithms="HS256")
     # print(payload) .decode('utf-8')
     result = check(token)
     if result is not None:
-        enc = jsonable_encoder(enc)
+        # enc = jsonable_encoder(enc)
+        # print(enc)
+        # encryptionKey = json.loads(encryptionKey)
         # base64.urlsafe_b64encode(enc['encryptionKey']).decode('utf-8')
-
-        print(bytes(enc['text'], 'utf-8'))
-        publicKey = rsa.PublicKey.load_pkcs1(enc['encryptionKey'])
-        encD = rsa.encrypt(bytes(enc['text'], 'utf-8'), publicKey)
+        encryptionKey = encryptionKey.replace('\\n', '\n').replace('\\t', '\t')
+        publicKey = rsa.PublicKey.load_pkcs1(encryptionKey.encode('utf-8'))
+        encD = rsa.encrypt(text.encode('utf-8'), publicKey)
         encDToString = base64.urlsafe_b64encode(encD).decode('utf8')
         return {'ciphertext': encDToString}
     else:
@@ -137,16 +145,31 @@ async def list_students(token: Union[str, None] = Header(default=None), enc: Enc
 @app.post(
     "/decrypt-text", response_description="Decrypts text", response_model=DecryptedText
 )
-async def list_students(token: Union[str, None] = Header(default=None), decryptionKey: Union[str, None] = Header(default=None), dec: Decrypt = Body(...)):
+async def decrypt(ciphertext: Union[str, None] = Header(default=None), decryptionKey: Union[str, None] = Header(default=None), token: Union[str, None] = Header(default=None)):
     # payload = jwt.decode(token, jwtSecret, algorithms="HS256")
-    # print(payload) .decode('utf-8')
+    # print(payload).decode('utf-8')
+    
     result = check(token)
     if result is not None:
-        dec = jsonable_encoder(dec)
-        
-        privateKey = rsa.PrivateKey.load_pkcs1(decryptionKey)
+        # decryptionKey = jsonable_encoder(decryptionKey)
+        # enn = json.dumps(enn)
+        # enn = enn.json()
+        decryptionKeyD = json.loads(json.dumps(decryptionKey))
+        # pk = rsa.PrivateKey._load_pkcs1_pem
 
-        binText = base64.urlsafe_b64decode(dec['ciphertext'])
+        # key = enn['decryptionKey']
+        decryptionKey = decryptionKey.replace('\\n', '\n').replace('\\t', '\t')
+
+        print(ciphertext)
+        print(decryptionKey)
+
+        
+
+        privateKey = rsa.PrivateKey.load_pkcs1(decryptionKey.encode('utf-8'))
+
+        return {'plaintext': 'Hello'}
+
+        binText = base64.urlsafe_b64decode(ciphertext)
         decodedVal = rsa.decrypt(binText, privateKey)
         decodedString = decodedVal.decode('utf-8')
         return {'plaintext': decodedString}

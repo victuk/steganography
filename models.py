@@ -125,7 +125,7 @@ class LoginModel(BaseModel):
 
 class Encrypt(BaseModel):
     text: str = Field(...)
-    encryptionKey: bytes = Field(...)
+    encryptionKey: str = Field(...)
 
     class Config:
         allow_population_by_field_name = True
@@ -154,6 +154,7 @@ class EncryptedText(BaseModel):
 
 class Decrypt(BaseModel):
     ciphertext: str = Field(...)
+    decryptionKey: str = Field(...)
 
     class Config:
         allow_population_by_field_name = True
@@ -161,7 +162,7 @@ class Decrypt(BaseModel):
         json_encoders = {ObjectId: str}
         schema_extra = {
             "example": {
-                "text": "Hello",
+                "ciphertext": "Hello",
                 "decryptionKey": "oewfihowiehfweifhoih"
             }
         }
