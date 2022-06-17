@@ -10,6 +10,7 @@ from pymongo import MongoClient
 import hashPassword
 import jwt
 from PIL import Image
+import requests
 import rsa
 import base64
 from sendEmail import sendMail, sendMailTwo, sendMailWithAttachment
@@ -182,7 +183,6 @@ async def decrypt(ciphertext: Union[str, None] = Header(default=None), decryptio
 )
 async def list_students(token: Union[str, None] = Header(default=None), f5key: Union[str, None] = Header(default=None), textToHide: Union[str, None] = Header(default=None), email: Union[str, None] = Header(default=None), file: UploadFile = File(...)):
     # image = file.filename
-    
     # fileAction = jsonable_encoder(file.action)
     result = check(token)
     if result is not None:
@@ -233,6 +233,12 @@ async def list_students(token: Union[str, None] = Header(default=None), f5key: U
         readKey = key.read()
         print(readKey)
         print(f5key)
+
+        content = file.file.read()
+
+
+        with open(file.filename, 'wb') as f:
+                f.write(content)
         
         if readKey == f5key:
 
