@@ -111,14 +111,14 @@ async def generate_keys(token: Union[str, None] = Header(default=None), keyLengt
         print('Sender', payload['email'])
         print('Receiver', keyLength['PKReceiversEmail'])
         
-        sendMail(payload['email'], keyLength['PKReceiversEmail'], privateKeyMessage, privateKeydata)
+        sendMail(payload['email'], keyLength['PKReceiversEmail'], privateKeyMessage, str(privateKeydata)[2:-1])
 
-        sendMail(payload['email'], payload['email'], publicKeyMessage, publicKeydata)
+        sendMail(payload['email'], payload['email'], publicKeyMessage, str(publicKeydata)[2:-1])
 
     else:
         print("Key length should not be less than 1024")
         raise HTTPException(status_code=404, detail=f"Key length should not be less than 1024")
-    return {'successful': True, 'publicKey': publicKeydata}
+    return {'successful': True, 'publicKey': str(publicKeydata)}
 
 
 @app.post(
