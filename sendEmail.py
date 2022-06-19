@@ -13,24 +13,24 @@ from email.mime.base import MIMEBase
 import textwrap
 from email.mime.image import MIMEImage
 
-def send_mail(send_from, send_to, subject, text, files=None,
-              server="127.0.0.1"):
-    assert isinstance(send_to, list)
+# def send_mail(send_from, send_to, subject, text, files=None,
+#               server="127.0.0.1"):
+#     assert isinstance(send_to, list)
 
-    msg = MIMEMultipart()
-    msg['From'] = send_from
-    msg['To'] = COMMASPACE.join(send_to)
-    msg['Date'] = formatdate(localtime=True)
-    msg['Subject'] = subject
+#     msg = MIMEMultipart()
+#     msg['From'] = send_from
+#     msg['To'] = COMMASPACE.join(send_to)
+#     msg['Date'] = formatdate(localtime=True)
+#     msg['Subject'] = subject
 
-    text = MIMEText("test")
-    msg.attach(text)
-    image = MIMEImage(img_data, name=os.path.basename(files))
-    msg.attach(image)
+#     text = MIMEText("test")
+#     msg.attach(text)
+#     image = MIMEImage(img_data, name=os.path.basename(files))
+#     msg.attach(image)
 
-    smtp = smtplib.SMTP(server)
-    smtp.sendmail(send_from, send_to, msg.as_string())
-    smtp.close()
+#     smtp = smtplib.SMTP(server)
+#     smtp.sendmail(send_from, send_to, msg.as_string())
+#     smtp.close()
 
 def sendMail(sendFrom, to, subject, message):
     

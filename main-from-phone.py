@@ -360,19 +360,28 @@ async def show_student(token: Union[str, None] = Header(default=None), f5key: Un
 @app.post(
     "/reveal-hidden-image", response_description="Get a single student", response_model=ImageLink
 )
-async def show_student(token: Union[str, None] = Header(default=None), file: UploadFile = File(...)):
+async def show_student(token: Union[str, None] = Header(default=None), f5key: Union[str, None] = Header(default=None), file: UploadFile = File(...)):
     result = check(token)
     if result is not None:
-        try:
-            contents = await file.read()
-            with open(file.filename, 'wb') as f:
-                f.write(contents)
-        except Exception:
-            return{"message": "can't get images"}
-        finally:
-            unmerged_image = unmerge(Image.open(file.filename))
-            unmerged_image.save('static/the-hidden-image.png')
-            return {"imageLink": "static/the-hidden-image.png"}
+        fileName = result['email'][:-4]
+        key = open(fileName + '.txt', 'r')
+        readKey = key.read()
+
+        print(key)
+        print(readKey)
+        print(f5key)
+
+        if readKey == f5key:
+            try:
+                contents = await file.read()
+                with open(file.filename, 'wb') as f:
+                    f.write(contents)
+            except Exception:
+                return{"message": "can't get images"}
+            finally:
+                unmerged_image = unmerge(Image.open(file.filename))
+                unmerged_image.save('static/the-hidden-image.png')
+                return {"imageLink": "static/the-hidden-image.png"} 
     else:
         raise HTTPException(status_code=404, detail=f"Invalid token")  
 
