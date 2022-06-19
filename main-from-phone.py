@@ -3,7 +3,7 @@ import os
 from fastapi import FastAPI, Body, HTTPException, status, Header, UploadFile, File, Form
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
-from models import ImageFileResponse, StudentModel, Req, StudentModelReply, UpdateStudentModel, responseWithKey, LoginModel, Encrypt, EncryptedText, DecryptedText, Decrypt, ImageFile, HideText
+from models import ImageFileResponse, StudentModel, Req, StudentModelReply, UpdateStudentModel, responseWithKey, LoginModel, Encrypt, EncryptedText, DecryptedText, Decrypt, ImageFile, HideText, ImageLink
 from typing import List, Union
 import motor.motor_asyncio
 from pymongo import MongoClient
@@ -13,11 +13,13 @@ from PIL import Image
 import requests
 import rsa
 import base64
-from sendEmail import sendMail, sendMailTwo, sendMailWithAttachment
+from sendEmail import sendMail, sendMailTwo, sendMailWithAttachment, sendMailWithFile
 from checkLogin import check
 from main import encode_enc, modPix
 from fastapi.middleware.cors import CORSMiddleware
 from sys import stdout
+from hideImageInImage import merge, unmerge
+from fastapi.staticfiles import StaticFiles
 
 jwtSecret = '1592e2945cc2e8153171e692c44ceeffd98128be9a79b2d6'
 mongUrl = 'mongodb://localhost:27017/'
@@ -37,6 +39,8 @@ app.add_middleware(
     allow_headers=["*"],
     expose_headers=["*"]
 )
+
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 client = motor.motor_asyncio.AsyncIOMotorClient(mongUrl)
 db = client.steg
@@ -94,15 +98,15 @@ async def generate_keys(token: Union[str, None] = Header(default=None), keyLengt
     if(keyL >= 1024):
         (publicKey, privateKey) = rsa.newkeys(keyL)
 
-        with open('publicKey.pem', 'wb') as p:
+        with open('static/publicKey.pem', 'wb') as p:
             p.write(publicKey.save_pkcs1('PEM'))
-        with open('privateKey.pem', 'wb') as p:
+        with open('static/privateKey.pem', 'wb') as p:
             p.write(privateKey.save_pkcs1('PEM'))
 
-        with open('privateKey.pem', 'rb') as privatefile:
+        with open('static/privateKey.pem', 'rb') as privatefile:
             privateKeydata = privatefile.read()
 
-        with open('publicKey.pem', 'rb') as publicfile:
+        with open('static/publicKey.pem', 'rb') as publicfile:
             publicKeydata = publicfile.read()
 
         publicKeyMessage = 'Public Key to decrypt messages'
@@ -111,21 +115,26 @@ async def generate_keys(token: Union[str, None] = Header(default=None), keyLengt
 
         print('Sender', payload['email'])
         print('Receiver', keyLength['PKReceiversEmail'])
-        
-        sendMail(payload['email'], keyLength['PKReceiversEmail'], privateKeyMessage, str(privateKeydata)[2:-1])
 
-        sendMail(payload['email'], payload['email'], publicKeyMessage, str(publicKeydata)[2:-1])
+        sendMailWithFile(payload['email'], keyLength['PKReceiversEmail'], privateKeyMessage, 'Private Key File', 'static/privateKey.pem')
+
+        sendMailWithFile(payload['email'], payload['email'], publicKeyMessage, 'Public Key File', 'static/publicKey.pem')
+        
+        # sendMail(payload['email'], keyLength['PKReceiversEmail'], privateKeyMessage, str(privateKeydata)[2:-1])
+
+        # sendMail(payload['email'], payload['email'], publicKeyMessage, str(publicKeydata)[2:-1])
+        return {'successful': True, 'publicKey': 'static/publicKey.pem'}
 
     else:
         print("Key length should not be less than 1024")
         raise HTTPException(status_code=404, detail=f"Key length should not be less than 1024")
-    return {'successful': True, 'publicKey': str(publicKeydata)}
+    
 
 
 @app.post(
     "/encrypt-text", response_description="Encrypts text", response_model=EncryptedText
 )
-async def list_students(text: Union[str, None] = Header(default=None), encryptionKey: Union[str, None] = Header(default=None), token: Union[str, None] = Header(default=None)):
+async def list_students(text: Union[str, None] = Header(default=None), token: Union[str, None] = Header(default=None), file: UploadFile = File(...)):
     # payload = jwt.decode(token, jwtSecret, algorithms="HS256")
     # print(payload) .decode('utf-8')
     result = check(token)
@@ -134,8 +143,23 @@ async def list_students(text: Union[str, None] = Header(default=None), encryptio
         # print(enc)
         # encryptionKey = json.loads(encryptionKey)
         # base64.urlsafe_b64encode(enc['encryptionKey']).decode('utf-8')
-        encryptionKey = encryptionKey.replace('\\n', '\n').replace('\\t', '\t')
-        publicKey = rsa.PublicKey.load_pkcs1(encryptionKey.encode('utf-8'))
+        # with open(file., 'rb') as publicfile:
+        #     publicKeydata = publicfile.read()
+        
+        content = file.file.read()
+
+
+        with open(file.filename, 'wb') as f:
+                f.write(content)
+
+        # print(publicKeydata)
+
+        with open(file.filename, 'rb') as publicfile:
+            publicKeydata = publicfile.read()
+
+        # return {'ciphertext': 'hhhhh'}
+        # encryptionKey = encryptionKey.replace('\\n', '\n').replace('\\t', '\t')
+        publicKey = rsa.PublicKey.load_pkcs1(publicKeydata)
         encD = rsa.encrypt(text.encode('utf-8'), publicKey)
         encDToString = base64.urlsafe_b64encode(encD).decode('utf8')
         return {'ciphertext': encDToString}
@@ -146,7 +170,7 @@ async def list_students(text: Union[str, None] = Header(default=None), encryptio
 @app.post(
     "/decrypt-text", response_description="Decrypts text", response_model=DecryptedText
 )
-async def decrypt(ciphertext: Union[str, None] = Header(default=None), decryptionKey: Union[str, None] = Header(default=None), token: Union[str, None] = Header(default=None)):
+async def decrypt(ciphertext: Union[str, None] = Header(default=None), token: Union[str, None] = Header(default=None), file: UploadFile = File(...)):
     # payload = jwt.decode(token, jwtSecret, algorithms="HS256")
     # print(payload).decode('utf-8')
     
@@ -155,21 +179,35 @@ async def decrypt(ciphertext: Union[str, None] = Header(default=None), decryptio
         # decryptionKey = jsonable_encoder(decryptionKey)
         # enn = json.dumps(enn)
         # enn = enn.json()
-        decryptionKeyD = json.loads(json.dumps(decryptionKey))
-        # pk = rsa.PrivateKey._load_pkcs1_pem
 
-        # key = enn['decryptionKey']
-        decryptionKey = decryptionKey.replace('\\n', '\n').replace('\\t', '\t')
+        content = file.file.read()
 
-        print(ciphertext)
-        print(decryptionKey)
+        # return {'plaintext': 'Hello'}
+
+
+        with open(file.filename, 'wb') as f:
+                f.write(content)
+
+        with open(file.filename, 'rb') as privatefile:
+            privateKeydata = privatefile.read()
 
         
 
-        privateKey = rsa.PrivateKey.load_pkcs1(decryptionKey.encode('utf-8'))
+        # decryptionKeyD = json.loads(json.dumps(decryptionKey))
+        # pk = rsa.PrivateKey._load_pkcs1_pem
 
-        return {'plaintext': 'Hello'}
+        # key = enn['decryptionKey']
+        # decryptionKey = decryptionKey.replace('\\n', '\n').replace('\\t', '\t')
 
+        # print(ciphertext)
+        # print(decryptionKey)
+
+        
+
+        privateKey = rsa.PrivateKey.load_pkcs1(privateKeydata)
+
+        # return {'plaintext': 'Hello'}
+        # return {'plaintext': 'Hello'}
         binText = base64.urlsafe_b64decode(ciphertext)
         decodedVal = rsa.decrypt(binText, privateKey)
         decodedString = decodedVal.decode('utf-8')
@@ -198,8 +236,8 @@ async def list_students(token: Union[str, None] = Header(default=None), f5key: U
             studentD = await db["students"].find_one({"email": email})
             user = await db["students"].find_one({"email": result['email']})
             
-            if len(f5key) > 24:
-                raise HTTPException(status_code=404, detail=f"Maximum keylength exceeded")
+            if len(f5key) > 24 or len(f5key) < 6:
+                raise HTTPException(status_code=404, detail=f"Invalid f5 key length")
             else:
                 fileName = result['email'][:-4]
                 with open(fileName + '.txt', 'w') as f:
@@ -268,14 +306,81 @@ async def list_students(token: Union[str, None] = Header(default=None), f5key: U
 
         else:
             raise HTTPException(status_code=404, detail=f"f5 keys don't match")
+    else:
+        raise HTTPException(status_code=404, detail=f"Invalid token")  
 
-    
+
+@app.post(
+    "/hide-image-in-image", response_description="Hides a smaller image in a larger image", response_model=ImageLink
+)
+async def show_student(token: Union[str, None] = Header(default=None), f5key: Union[str, None] = Header(default=None), email: Union[str, None] = Header(default=None),  file: UploadFile = File(...), fileTwo: UploadFile = File(...)):
+    result = check(token)
+    print(f5key)
+    if result is not None:
+        try:
+            contents = await file.read()
+            with open(file.filename, 'wb') as f:
+                f.write(contents)
+
+            contentsTwo = await fileTwo.read()
+            with open(fileTwo.filename, 'wb') as f:
+                f.write(contentsTwo)
+
+        except Exception:
+            return{"message": "can't get images"}
+        finally:
+            if len(f5key) > 24 or len(f5key) < 6:
+                raise HTTPException(status_code=404, detail=f"Invalid f5 key length")
+            else:
+                fileName = result['email'][:-4]
+                with open(fileName + 'forImg' + '.txt', 'w') as f:
+                    f.write(f5key)
+
+            f5key = f5key.split(',')
+
+            studentD = await db["students"].find_one({"email": email})
+
+            subject = "Email With Picture Attachment"
+            message = "Hi {}, you have received an attachment. Your f5 key is: ".format(studentD['username'])
+
+            
+
+            merged_image = merge(Image.open(file.filename), Image.open(fileTwo.filename))
+            merged_image.save('static/outputfile.png')
+            sendMailWithAttachment(result['email'], email, subject, message + str(f5key), 'static/outputfile.png')
+            return {"imageLink": "static/outputfile.png"}
+            # merge(file.filename, fileTwo.filename, 'outputfile.png')
+        
+    # if (student := await db["students"].find_one({"_id": id})) is not None:
+    #     return student
+    else:
+        raise HTTPException(status_code=404, detail=f"Invalid token")  
+
+
+@app.post(
+    "/reveal-hidden-image", response_description="Get a single student", response_model=ImageLink
+)
+async def show_student(token: Union[str, None] = Header(default=None), file: UploadFile = File(...)):
+    result = check(token)
+    if result is not None:
+        try:
+            contents = await file.read()
+            with open(file.filename, 'wb') as f:
+                f.write(contents)
+        except Exception:
+            return{"message": "can't get images"}
+        finally:
+            unmerged_image = unmerge(Image.open(file.filename))
+            unmerged_image.save('static/the-hidden-image.png')
+            return {"imageLink": "static/the-hidden-image.png"}
+    else:
+        raise HTTPException(status_code=404, detail=f"Invalid token")  
 
 
 @app.get(
     "/{id}", response_description="Get a single student", response_model=StudentModel
 )
-async def show_student(id: str):
+async def show_student(file: UploadFile = File(...)):
     if (student := await db["students"].find_one({"_id": id})) is not None:
         return student
 

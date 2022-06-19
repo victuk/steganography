@@ -2,6 +2,7 @@
 import smtplib, ssl
 from os.path import basename
 import os
+from email import encoders
 
 # Import the email modules we'll need
 from email.mime.text import MIMEText
@@ -81,6 +82,39 @@ def sendMailWithAttachment(sendFrom, to, subject, message, attachmentURL):
     image = MIMEImage(img_data, name=os.path.basename(attachmentURL))
     msg.attach(image)
     server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
+
+    # server.starttls(context=context) # Secure the connection
+    server.login('victorp3tr@gmail.com', 'aidmgsqcyofsbxlo')
+    server.sendmail(sendFrom, to, msg.as_string())
+    server.quit()
+
+def sendMailWithFile(sendFrom, to, subject, message, attachmentURL):
+    
+    # with open(attachmentURL, 'rb') as f:
+    #     img_data = f.read()
+
+    msg = MIMEMultipart()
+    msg['Subject'] = subject
+    msg['From'] = sendFrom
+    msg['To'] = to
+
+    text = MIMEText(message)
+    msg.attach(text)
+    # image = MIMEImage(img_data, name=os.path.basename(attachmentURL))
+    # msg.attach(image)
+
+    server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
+
+    filename = attachmentURL[7:]
+
+    attachment = open(attachmentURL, "rb")
+
+    part = MIMEBase('application', 'octet-stream')
+    part.set_payload((attachment).read())
+    encoders.encode_base64(part)
+    part.add_header('Content-Disposition', "attachment; filename= %s" % filename)
+
+    msg.attach(part)
 
     # server.starttls(context=context) # Secure the connection
     server.login('victorp3tr@gmail.com', 'aidmgsqcyofsbxlo')
