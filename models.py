@@ -231,3 +231,19 @@ class ImageLink(BaseModel):
                 "imageLink": "static/file.png"
             }
         }
+
+class Check(BaseModel):
+    private_key_links: list = Field(...)
+    image_links: list = Field(...)
+    f_five_links: list = Field(...)
+    class Config:
+        allow_population_by_field_name = True
+        arbitrary_types_allowed = True
+        json_encoders = {ObjectId: str}
+        schema_extra = {
+            "example": {
+                "private_key_links": [],
+                "image_links": [],
+                "f_five_links": []
+            }
+        }

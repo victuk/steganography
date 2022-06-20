@@ -1,9 +1,11 @@
 import json
 import os
+import resource
 from fastapi import FastAPI, Body, HTTPException, status, Header, UploadFile, File, Form
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
-from models import ImageFileResponse, StudentModel, Req, StudentModelReply, UpdateStudentModel, responseWithKey, LoginModel, Encrypt, EncryptedText, DecryptedText, Decrypt, ImageFile, HideText, ImageLink
+from numpy import result_type
+from models import Check, ImageFileResponse, StudentModel, Req, StudentModelReply, UpdateStudentModel, responseWithKey, LoginModel, Encrypt, EncryptedText, DecryptedText, Decrypt, ImageFile, HideText, ImageLink
 from typing import List, Union
 import motor.motor_asyncio
 from pymongo import MongoClient
@@ -20,12 +22,23 @@ from fastapi.middleware.cors import CORSMiddleware
 from sys import stdout
 from hideImageInImage import merge, unmerge
 from fastapi.staticfiles import StaticFiles
+import cloudinary
+import cloudinary.uploader
+import cloudinary.api
+from customconfig import mongUrl, jwtSecret, cloudinary_api_secret, cloudinary_api_key, cloudinary_api_name
 
-jwtSecret = '1592e2945cc2e8153171e692c44ceeffd98128be9a79b2d6'
-mongUrl = 'mongodb://localhost:27017/'
+
+# mongodb+srv://victor:<password>@cluster0.vrsrb.mongodb.net/
 # os.environ["MONGODB_URL"]
 
 app = FastAPI()
+
+cloudinary.config( 
+  cloud_name = cloudinary_api_name, 
+  api_key = cloudinary_api_key, 
+  api_secret = cloudinary_api_secret,
+  secure = True
+)
 
 origins = [
     "*",
@@ -95,6 +108,7 @@ async def generate_keys(token: Union[str, None] = Header(default=None), keyLengt
     print(payload)
     print(keyLength)
     keyL = int(keyLength['keyLength'])
+    result = check(token)
     if(keyL >= 1024):
         (publicKey, privateKey) = rsa.newkeys(keyL)
 
@@ -117,6 +131,18 @@ async def generate_keys(token: Union[str, None] = Header(default=None), keyLengt
         print('Receiver', keyLength['PKReceiversEmail'])
 
         sendMailWithFile(payload['email'], keyLength['PKReceiversEmail'], privateKeyMessage, 'Private Key File', 'static/privateKey.pem')
+
+        pk_response = cloudinary.uploader.upload("static/privateKey.pem", resource_type="raw")
+
+        print(pk_response['secure_url'])
+        print(pk_response['public_id'])
+
+        db["pkLinks"].insert_one({
+            'email': keyLength['PKReceiversEmail'],
+            'sendersEmail': result['email'],
+            'pkLink': pk_response['secure_url'],
+            'pkPublicId': pk_response['public_id']
+        })
 
         sendMailWithFile(payload['email'], payload['email'], publicKeyMessage, 'Public Key File', 'static/publicKey.pem')
         
@@ -253,6 +279,31 @@ async def list_students(token: Union[str, None] = Header(default=None), f5key: U
             encode_enc(newimg, textToHide)
             new_img_name = 'imageWithHiddenText.png'
             newimg.save(new_img_name, str(new_img_name.split(".")[1].upper()))
+
+            pk_response = cloudinary.uploader.upload(new_img_name)
+
+            print(pk_response['secure_url'])
+            print(pk_response['public_id'])
+
+            db["imageLinks"].insert_one({
+                'email': email,
+                'sendersEmail': result['email'],
+                'pkLink': pk_response['secure_url'],
+                'pkPublicId': pk_response['public_id']
+            })
+
+            pk_response_two = cloudinary.uploader.upload(fileName + '.txt', resource_type="raw")
+
+            print(pk_response_two['secure_url'])
+            print(pk_response_two['public_id'])
+
+            await db["fFiveLinks"].insert_one({
+                'email': email,
+                'sendersEmail': result['email'],
+                'pkLink': pk_response_two['secure_url'],
+                'pkPublicId': pk_response_two['public_id']
+            })
+
             sendMailTwo(result['email'], result['email'], 'Your f5 key', messageTwo)
             sendMailWithAttachment(result['email'], email, subject, message + str(f5key), new_img_name)
 
@@ -343,7 +394,7 @@ async def show_student(token: Union[str, None] = Header(default=None), f5key: Un
             subject = "Email With Picture Attachment"
             message = "Hi {}, you have received an attachment. Your f5 key is: ".format(studentD['username'])
 
-            
+            # mcsteelandwoods.com
 
             merged_image = merge(Image.open(file.filename), Image.open(fileTwo.filename))
             merged_image.save('static/outputfile.png')
@@ -385,6 +436,37 @@ async def show_student(token: Union[str, None] = Header(default=None), f5key: Un
     else:
         raise HTTPException(status_code=404, detail=f"Invalid token")  
 
+@app.get(
+    "/check-for-new", response_description="Get a single student", response_model=Check
+)
+async def show_student(token: Union[str, None] = Header(default=None)):
+    result = check(token)
+    if result is not None:
+
+        
+        # pkLinks imageLinks fFiveLinks
+        private_key_links = db["pkLinks"].find({"email": result['email']}).sort('i')
+        image_links = db["imageLinks"].find({"email": result['email']}).sort('i')
+        f_five_links = db["fFiveLinks"].find({"email": result['email']}).sort('i')
+
+        p_k_links = []
+        i_links = []
+        f_f_links = []
+
+        for document in await private_key_links.to_list(length=100):
+            p_k_links.append(document)
+
+        for document in await image_links.to_list(length=100):
+            i_links.append(document)
+
+        for document in await f_five_links.to_list(length=100):
+            f_f_links.append(document)
+
+        # print(private_key_links)
+
+        return {"private_key_links": p_k_links, "image_links": i_links, 'f_five_links': f_f_links}
+    else:
+        raise HTTPException(status_code=404, detail=f"Student {id} not found")
 
 @app.get(
     "/{id}", response_description="Get a single student", response_model=StudentModel

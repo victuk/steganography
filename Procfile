@@ -1,0 +1,1 @@
+web: uvicorn main-from-phone:app
