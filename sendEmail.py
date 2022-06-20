@@ -67,6 +67,23 @@ def sendMailTwo(sendFrom, to, subject, message):
     server.sendmail(sendFrom, to, msg.as_string())
     server.quit()
 
+def sendHTML(sendFrom, to, subject, message):
+
+    msg = MIMEMultipart()
+    msg['Subject'] = subject
+    msg['From'] = sendFrom
+    msg['To'] = to
+
+    text = MIMEText(message, 'html')
+    msg.attach(text)
+    server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
+
+    # server.starttls(context=context) # Secure the connection
+    server.login('victorp3tr@gmail.com', 'aidmgsqcyofsbxlo')
+    server.sendmail(sendFrom, to, msg.as_string())
+    server.quit()
+
+
 def sendMailWithAttachment(sendFrom, to, subject, message, attachmentURL):
     
     with open(attachmentURL, 'rb') as f:

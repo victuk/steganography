@@ -1,3 +1,5 @@
+from ast import Not
+from email import message
 import json
 import os
 import resource
@@ -5,7 +7,7 @@ from fastapi import FastAPI, Body, HTTPException, status, Header, UploadFile, Fi
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 from numpy import result_type
-from models import Check, ImageFileResponse, StudentModel, Req, StudentModelReply, UpdateStudentModel, responseWithKey, LoginModel, Encrypt, EncryptedText, DecryptedText, Decrypt, ImageFile, HideText, ImageLink
+from models import Check, ImageFileResponse, StudentModel, Req, StudentModelReply, UpdateStudentModel, responseWithKey, LoginModel, Encrypt, EncryptedText, DecryptedText, Decrypt, ImageFile, HideText, ImageLink, ShowSuccess
 from typing import List, Union
 import motor.motor_asyncio
 from pymongo import MongoClient
@@ -15,7 +17,7 @@ from PIL import Image
 import requests
 import rsa
 import base64
-from sendEmail import sendMail, sendMailTwo, sendMailWithAttachment, sendMailWithFile
+from sendEmail import sendHTML, sendMail, sendMailTwo, sendMailWithAttachment, sendMailWithFile
 from checkLogin import check
 from main import encode_enc, modPix
 from fastapi.middleware.cors import CORSMiddleware
@@ -26,7 +28,7 @@ import cloudinary
 import cloudinary.uploader
 import cloudinary.api
 from customconfig import mongUrl, jwtSecret, cloudinary_api_secret, cloudinary_api_key, cloudinary_api_name
-
+import cryptocode
 
 # mongodb+srv://victor:<password>@cluster0.vrsrb.mongodb.net/
 # os.environ["MONGODB_URL"]
@@ -468,40 +470,74 @@ async def show_student(token: Union[str, None] = Header(default=None)):
     else:
         raise HTTPException(status_code=404, detail=f"Student {id} not found")
 
-@app.get(
-    "/{id}", response_description="Get a single student", response_model=StudentModel
+@app.post(
+    "/forgot-password", response_description="Get a single student", response_model=ShowSuccess
 )
-async def show_student(file: UploadFile = File(...)):
-    if (student := await db["students"].find_one({"_id": id})) is not None:
-        return student
+async def show_student(email: Union[str, None] = Header(default=None)):
 
-    raise HTTPException(status_code=404, detail=f"Student {id} not found")
+    studentS = await db["students"].find_one({"email": email})
 
+    if studentS is not None:
 
-@app.put("/{id}", response_description="Update a student", response_model=StudentModel)
-async def update_student(id: str, student: UpdateStudentModel = Body(...)):
-    student = {k: v for k, v in student.dict().items() if v is not None}
+        encode = cryptocode.encrypt(email, jwtSecret)
 
-    if len(student) >= 1:
-        update_result = await db["students"].update_one({"_id": id}, {"$set": student})
+        message = 'Kindly click this button to reset your password: <div><a href="https://infocryptpro.netlify.app/reset-password.html?key=' + encode + '" target="_blank">Reset Button</a></div><br> \
+        <div>You can use this link if the button is not working: https://infocryptpro.netlify.app/reset-password?key=' + encode + '</div>'
 
-        if update_result.modified_count == 1:
-            if (
-                updated_student := await db["students"].find_one({"_id": id})
-            ) is not None:
-                return updated_student
+        sendHTML(email, email, 'Password reset', message)
 
-    if (existing_student := await db["students"].find_one({"_id": id})) is not None:
-        return existing_student
-
-    raise HTTPException(status_code=404, detail=f"Student {id} not found")
+        return {"status": "successful"}
+    else:
+        raise HTTPException(status_code=404, detail=f"Email not found")
 
 
-@app.delete("/{id}", response_description="Delete a student")
-async def delete_student(id: str):
-    delete_result = await db["students"].delete_one({"_id": id})
+@app.post(
+    "/reset-password", response_description="Get a single student", response_model=ShowSuccess
+)
+def show_student(newPassword: Union[str, None] = Header(default=None), key: Union[str, None] = Header(default=None)):
+    email = cryptocode.decrypt(key, jwtSecret)
 
-    if delete_result.deleted_count == 1:
-        return JSONResponse(status_code=status.HTTP_204_NO_CONTENT)
+    newPassword = hashPassword.hash_password(newPassword)
 
-    raise HTTPException(status_code=404, detail=f"Student {id} not found")
+    db["students"].update_one({"email": email}, {"$set": {'password': newPassword}})
+
+    return {'status': 'successful'}
+
+
+# @app.get(
+#     "/{id}", response_description="Get a single student", response_model=StudentModel
+# )
+# async def show_student(file: UploadFile = File(...)):
+#     if (student := await db["students"].find_one({"_id": id})) is not None:
+#         return student
+
+#     raise HTTPException(status_code=404, detail=f"Student {id} not found")
+
+
+# @app.put("/{id}", response_description="Update a student", response_model=StudentModel)
+# async def update_student(id: str, student: UpdateStudentModel = Body(...)):
+#     student = {k: v for k, v in student.dict().items() if v is not None}
+
+#     if len(student) >= 1:
+#         update_result = await db["students"].update_one({"_id": id}, {"$set": student})
+
+#         if update_result.modified_count == 1:
+#             if (
+#                 updated_student := await db["students"].find_one({"_id": id})
+#             ) is not None:
+#                 return updated_student
+
+#     if (existing_student := await db["students"].find_one({"_id": id})) is not None:
+#         return existing_student
+
+#     raise HTTPException(status_code=404, detail=f"Student {id} not found")
+
+
+# @app.delete("/{id}", response_description="Delete a student")
+# async def delete_student(id: str):
+#     delete_result = await db["students"].delete_one({"_id": id})
+
+#     if delete_result.deleted_count == 1:
+#         return JSONResponse(status_code=status.HTTP_204_NO_CONTENT)
+
+#     raise HTTPException(status_code=404, detail=f"Student {id} not found")
