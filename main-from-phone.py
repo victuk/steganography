@@ -100,6 +100,27 @@ async def create_student(student: LoginModel = Body(...)):
     # created_student = await db["students"].find_one({"_id": new_student.inserted_id})
     # return JSONResponse(status_code=status.HTTP_201_CREATED, content=created_student)
 
+
+
+
+
+
+@app.post(
+    "/request-key", response_description="Get a single student", response_model=StudentModel
+)
+async def show_student(file: UploadFile = File(...)):
+    if (student := await db["students"].find_one({"_id": id})) is not None:
+        return student
+
+    raise HTTPException(status_code=404, detail=f"Student {id} not found")
+
+
+
+
+
+
+
+
 @app.post(
     "/generate-key", response_description="List all students", response_model=responseWithKey
 )
