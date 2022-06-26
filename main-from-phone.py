@@ -7,7 +7,7 @@ from fastapi import FastAPI, Body, HTTPException, status, Header, UploadFile, Fi
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 from numpy import result_type
-from models import Check, ImageFileResponse, StudentModel, Req, StudentModelReply, UpdateStudentModel, responseWithKey, LoginModel, Encrypt, EncryptedText, DecryptedText, Decrypt, ImageFile, HideText, ImageLink, ShowSuccess
+from models import Check, ImageFileResponse, StudentModel, Req, ShowProfile, responseWithPrivateKey, StudentModelReply, UpdateStudentModel, responseWithKey, LoginModel, Encrypt, EncryptedText, DecryptedText, Decrypt, ImageFile, HideText, ImageLink, ShowSuccess
 from typing import List, Union
 import motor.motor_asyncio
 from pymongo import MongoClient
@@ -84,7 +84,7 @@ async def create_student(student: LoginModel = Body(...)):
     studentD = await db["students"].find_one({"email": student['email']})
     print(studentD)
     if studentD is not None:
-        passwordMatch =hashPassword.verify_password(student['password'], studentD['password'])
+        passwordMatch = hashPassword.verify_password(student['password'], studentD['password'])
         if passwordMatch == True:
             print('Passwords match')
             token = jwt.encode({'studentID':studentD['_id'], 'email':studentD['email']}, jwtSecret, algorithm="HS256")
@@ -102,23 +102,121 @@ async def create_student(student: LoginModel = Body(...)):
 
 
 
-
+# https://fastapi.tiangolo.com/tutorial/
 
 
 @app.post(
-    "/request-key", response_description="Get a single student", response_model=StudentModel
+    "/request-key", response_description="Get a single student", response_model=ShowSuccess
 )
-async def show_student(file: UploadFile = File(...)):
-    if (student := await db["students"].find_one({"_id": id})) is not None:
-        return student
+async def show_student(token: Union[str, None] = Header(default=None), requestEmail: Union[str, None] = Header(default=None)):
+    result = check(token)
+    if result is not None:
+        db["requests"].insert_one({
+            'sendersEmail': result['email'],
+            'receiversEmail': requestEmail,
+            'requestStatus': 'pending',
+            'privateKeyLink': ''
+        })
+        return {'status': 'Request Sent successfully'}
+    else:
+        raise HTTPException(status_code=404, detail=f"Invalid token")
 
-    raise HTTPException(status_code=404, detail=f"Student {id} not found")
+@app.get(
+    "/key-request-status", response_description="Get a single student", response_model=ShowSuccess
+)
+async def show_student(token: Union[str, None] = Header(default=None), requestEmail: Union[str, None] = Header(default=None)):
+    result = check(token)
+    if result is not None:
+
+        reqs = []
+
+        req = db["pkLinks"].find({"sendersEmail": result['email']}).sort('i')
+        for document in await req.to_list(length=100):
+                    reqs.append(document)
+
+        return {'reqStatus': req}
+    else:
+        raise HTTPException(status_code=404, detail=f"Invalid token")
+
+@app.post(
+    "/approve-send-keys", response_description="Get a single student", response_model=responseWithPrivateKey
+)
+async def show_student(token: Union[str, None] = Header(default=None), approvalStatus: Union[str, None] = Header(default=None), keyL: Union[str, None] = Header(default=None)):
+    result = check(token)
+    if result is not None:
+        r = await db["requests"].find_one({'receiversEmail': token['email']})
+
+        if(keyL >= 1024):
+            (publicKey, privateKey) = rsa.newkeys(keyL)
+
+            with open('static/publicKey.pem', 'wb') as p:
+                p.write(publicKey.save_pkcs1('PEM'))
+            with open('static/privateKey.pem', 'wb') as p:
+                p.write(privateKey.save_pkcs1('PEM'))
+
+            with open('static/privateKey.pem', 'rb') as privatefile:
+                privateKeydata = privatefile.read()
+
+            with open('static/publicKey.pem', 'rb') as publicfile:
+                publicKeydata = publicfile.read()
+
+            # publicKeyMessage = 'Public Key to decrypt messages'
+
+            # privateKeyMessage = 'Private Key to encrypt messages'
+
+            # print('Sender', payload['email'])
+            # print('Receiver', keyLength['PKReceiversEmail'])
+
+            # sendMailWithFile(payload['email'], keyLength['PKReceiversEmail'], privateKeyMessage, 'Private Key File', 'static/privateKey.pem')
+
+            pk_response = cloudinary.uploader.upload("static/publicKey.pem", resource_type="raw")
+
+            print(pk_response['secure_url'])
+            print(pk_response['public_id'])
+
+            # db["requests"].insert_one({
+            #     'email': keyLength['PKReceiversEmail'],
+            #     'sendersEmail': result['email'],
+            #     'pkLink': pk_response['secure_url'],
+            #     'pkPublicId': pk_response['public_id']
+            # })
+
+            db["requests"].update_one({"receiversEmail": result['email']}, {"$set": {'requestStatus': 'approved', 'publicKeyLink': pk_response['secure_url']}})
+
+            # sendMailWithFile(payload['email'], payload['email'], publicKeyMessage, 'Public Key File', 'static/publicKey.pem')
+            
+            # sendMail(payload['email'], keyLength['PKReceiversEmail'], privateKeyMessage, str(privateKeydata)[2:-1])
+
+            # sendMail(payload['email'], payload['email'], publicKeyMessage, str(publicKeydata)[2:-1])
+            return {'successful': True, 'privateKey': 'static/privateKey.pem'}
+
+        else:
+            print("Key length should not be less than 1024")
+            raise HTTPException(status_code=404, detail=f"Key length should not be less than 1024")
+
+
+        
+    else:
+        raise HTTPException(status_code=404, detail=f"Invalid token")
 
 
 
+# https://fastapi.tiangolo.com/tutorial/
 
+@app.get(
+    "/get-profile", response_description="Get a single student", response_model=ShowProfile
+)
+async def show_student(token: Union[str, None] = Header(default=None)):
+    result = check(token)
+    if result is not None:
 
+        req = await db["students"].find_one({"email": result['email']})
 
+        print(req)
+
+        return {'name': req['username'], 'email': req['email']}
+    else:
+        raise HTTPException(status_code=404, detail=f"Invalid token")
 
 
 @app.post(
@@ -155,7 +253,7 @@ async def generate_keys(token: Union[str, None] = Header(default=None), keyLengt
 
         sendMailWithFile(payload['email'], keyLength['PKReceiversEmail'], privateKeyMessage, 'Private Key File', 'static/privateKey.pem')
 
-        pk_response = cloudinary.uploader.upload("static/privateKey.pem", resource_type="raw")
+        pk_response = cloudinary.uploader.upload("static/publicKey.pem", resource_type="raw")
 
         print(pk_response['secure_url'])
         print(pk_response['public_id'])
@@ -167,12 +265,12 @@ async def generate_keys(token: Union[str, None] = Header(default=None), keyLengt
             'pkPublicId': pk_response['public_id']
         })
 
-        sendMailWithFile(payload['email'], payload['email'], publicKeyMessage, 'Public Key File', 'static/publicKey.pem')
+        sendMailWithFile(payload['email'], payload['email'], publicKeyMessage, 'Public Key File', 'static/privateKey.pem')
         
         # sendMail(payload['email'], keyLength['PKReceiversEmail'], privateKeyMessage, str(privateKeydata)[2:-1])
 
         # sendMail(payload['email'], payload['email'], publicKeyMessage, str(publicKeydata)[2:-1])
-        return {'successful': True, 'publicKey': 'static/publicKey.pem'}
+        return {'successful': True, 'publicKey': 'static/publicKey.pem', 'privateKey': 'static/privateKey.pem'}
 
     else:
         print("Key length should not be less than 1024")
@@ -208,9 +306,11 @@ async def list_students(text: Union[str, None] = Header(default=None), token: Un
 
         # return {'ciphertext': 'hhhhh'}
         # encryptionKey = encryptionKey.replace('\\n', '\n').replace('\\t', '\t')
+        # print(text)
         publicKey = rsa.PublicKey.load_pkcs1(publicKeydata)
         encD = rsa.encrypt(text.encode('utf-8'), publicKey)
-        encDToString = base64.urlsafe_b64encode(encD).decode('utf8')
+        encDToString = base64.urlsafe_b64encode(encD).decode('utf-8')
+        
         return {'ciphertext': encDToString}
     else:
         raise HTTPException(status_code=404, detail=f"Invalid authentication key")
@@ -295,8 +395,8 @@ async def list_students(token: Union[str, None] = Header(default=None), f5key: U
             f5key = f5key.split(',')
 
             subject = "Email With Picture Attachment"
-            message = "Hi {}, you have received an attachment. Your f5 key is: ".format(studentD['username'])
-            messageTwo = "Hi {}, you sent an attachment to {} your f5 key is: {}".format(user['username'], email, str(f5key))
+            message = "Hi {}, you have received an attachment from {}. Your f5 key is: {}".format(studentD['username'], user['username'], str(','.join(f5key)))
+            messageTwo = "Hi {}, you sent an attachment to {} your f5 key is: {}".format(user['username'], email, str(','.join(f5key)))
             image = Image.open('./' + file.filename, 'r')
             newimg = image.copy()
             encode_enc(newimg, textToHide)
@@ -320,7 +420,7 @@ async def list_students(token: Union[str, None] = Header(default=None), f5key: U
             print(pk_response_two['secure_url'])
             print(pk_response_two['public_id'])
 
-            await db["fFiveLinks"].insert_one({
+            db["fFiveLinks"].insert_one({
                 'email': email,
                 'sendersEmail': result['email'],
                 'pkLink': pk_response_two['secure_url'],
@@ -328,7 +428,7 @@ async def list_students(token: Union[str, None] = Header(default=None), f5key: U
             })
 
             sendMailTwo(result['email'], result['email'], 'Your f5 key', messageTwo)
-            sendMailWithAttachment(result['email'], email, subject, message + str(f5key), new_img_name)
+            sendMailWithAttachment(result['email'], email, subject, message + str(','.join(f5key)), new_img_name)
 
         return {'status': 'Successful'}
     else:

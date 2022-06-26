@@ -1,4 +1,4 @@
-POST http://localhost:8000/login
+GET http://localhost:8000/get-profile
 token: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdHVkZW50SUQiOiI2MmExZTk4YzdlMzhhZDQ2M2RjYTVmMmQiLCJlbWFpbCI6Im1mcmVrZS52aWN0b3JAZ21haWwuY29tIn0.Rt7Aw9K4FKdfvyWHk2relrol7yRr1_PWGvWuLJF82bM
 Content-Type: application/json
 

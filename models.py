@@ -91,8 +91,26 @@ class UpdateStudentModel(BaseModel):
             }
         }
 
+
 class responseWithKey(BaseModel):
     publicKey: Optional[str]
+    privateKey: Optional[str]
+    successful: Optional[bool]
+
+    class Config:
+        arbitrary_types_allowed = True
+        json_encoders = {ObjectId: str}
+        schema_extra = {
+            "example": {
+                "username": "JaneDoe",
+                "email": "jdoe@example.com",
+                "gender": "male",
+                "password": "12345678"
+            }
+        }
+
+class responseWithPrivateKey(BaseModel):
+    privateKey: Optional[str]
     successful: Optional[bool]
 
     class Config:
@@ -193,6 +211,20 @@ class ImageFile(BaseModel):
             }
         }
 
+class ShowProfile(BaseModel):
+    name: str = Field(...)
+    email: str = Field(...)
+    class Config:
+        allow_population_by_field_name = True
+        arbitrary_types_allowed = True
+        json_encoders = {ObjectId: str}
+        schema_extra = {
+            "example": {
+                "name": "vic",
+                "email": "v@v.com"
+            }
+        }
+
 class ImageFileResponse(BaseModel):
     ciphertext: str = Field(...)
 
@@ -245,6 +277,19 @@ class Check(BaseModel):
                 "private_key_links": [],
                 "image_links": [],
                 "f_five_links": []
+            }
+        }
+
+class CheckKeys(BaseModel):
+    reqStatus: list = Field(...)
+    
+    class Config:
+        allow_population_by_field_name = True
+        arbitrary_types_allowed = True
+        json_encoders = {ObjectId: str}
+        schema_extra = {
+            "example": {
+                "reqStatus": []
             }
         }
 
