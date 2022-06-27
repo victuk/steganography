@@ -12,6 +12,7 @@ from email.utils import COMMASPACE, formatdate
 from email.mime.base import MIMEBase
 import textwrap
 from email.mime.image import MIMEImage
+from customconfig import smtp_email, smtp_password
 
 # def send_mail(send_from, send_to, subject, text, files=None,
 #               server="127.0.0.1"):
@@ -32,6 +33,8 @@ from email.mime.image import MIMEImage
 #     smtp.sendmail(send_from, send_to, msg.as_string())
 #     smtp.close()
 
+    # server.login('victorp3tr@gmail.com', 'aidmgsqcyofsbxlo')
+
 def sendMail(sendFrom, to, subject, message):
     
 
@@ -47,7 +50,7 @@ def sendMail(sendFrom, to, subject, message):
     server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
 
     # server.starttls(context=context) # Secure the connection
-    server.login('victorp3tr@gmail.com', 'aidmgsqcyofsbxlo')
+    server.login(smtp_email, smtp_password)
     server.sendmail(sendFrom, to, message)
     server.quit()
 
@@ -63,7 +66,7 @@ def sendMailTwo(sendFrom, to, subject, message):
     server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
 
     # server.starttls(context=context) # Secure the connection
-    server.login('victorp3tr@gmail.com', 'aidmgsqcyofsbxlo')
+    server.login(smtp_email, smtp_password)
     server.sendmail(sendFrom, to, msg.as_string())
     server.quit()
 
@@ -79,7 +82,7 @@ def sendHTML(sendFrom, to, subject, message):
     server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
 
     # server.starttls(context=context) # Secure the connection
-    server.login('victorp3tr@gmail.com', 'aidmgsqcyofsbxlo')
+    server.login(smtp_email, smtp_password)
     server.sendmail(sendFrom, to, msg.as_string())
     server.quit()
 
@@ -101,7 +104,7 @@ def sendMailWithAttachment(sendFrom, to, subject, message, attachmentURL):
     server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
 
     # server.starttls(context=context) # Secure the connection
-    server.login('victorp3tr@gmail.com', 'aidmgsqcyofsbxlo')
+    server.login(smtp_email, smtp_password)
     server.sendmail(sendFrom, to, msg.as_string())
     server.quit()
 
@@ -134,6 +137,6 @@ def sendMailWithFile(sendFrom, to, subject, message, attachmentURL):
     msg.attach(part)
 
     # server.starttls(context=context) # Secure the connection
-    server.login('victorp3tr@gmail.com', 'aidmgsqcyofsbxlo')
+    server.login(smtp_email, smtp_password)
     server.sendmail(sendFrom, to, msg.as_string())
     server.quit()
