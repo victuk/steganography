@@ -428,7 +428,7 @@ async def list_students(token: Union[str, None] = Header(default=None), f5key: U
             })
 
             sendMailTwo(result['email'], result['email'], 'Your f5 key', messageTwo)
-            sendMailWithAttachment(result['email'], email, subject, message + str(','.join(f5key)), new_img_name)
+            sendMailWithAttachment(result['email'], email, subject, message, new_img_name)
 
         return {'status': 'Successful'}
     else:
