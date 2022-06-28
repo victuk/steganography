@@ -244,14 +244,14 @@ async def generate_keys(token: Union[str, None] = Header(default=None), keyLengt
         with open('static/publicKey.pem', 'rb') as publicfile:
             publicKeydata = publicfile.read()
 
-        publicKeyMessage = 'Public Key to decrypt messages'
+        publicKeyMessage = 'Public Key to encrypt messages'
 
-        privateKeyMessage = 'Private Key to encrypt messages'
+        privateKeyMessage = 'Private Key to decrypt messages'
 
         print('Sender', payload['email'])
         print('Receiver', keyLength['PKReceiversEmail'])
 
-        sendMailWithFile(payload['email'], keyLength['PKReceiversEmail'], privateKeyMessage, 'Private Key File', 'static/privateKey.pem')
+        sendMailWithFile(payload['email'], keyLength['PKReceiversEmail'], publicKeyMessage, 'Public Key File', 'static/publicKey.pem')
 
         pk_response = cloudinary.uploader.upload("static/publicKey.pem", resource_type="raw")
 
@@ -265,7 +265,7 @@ async def generate_keys(token: Union[str, None] = Header(default=None), keyLengt
             'pkPublicId': pk_response['public_id']
         })
 
-        sendMailWithFile(payload['email'], payload['email'], publicKeyMessage, 'Public Key File', 'static/privateKey.pem')
+        sendMailWithFile(payload['email'], payload['email'], privateKeyMessage, 'Private Key File', 'static/privateKey.pem')
         
         # sendMail(payload['email'], keyLength['PKReceiversEmail'], privateKeyMessage, str(privateKeydata)[2:-1])
 
