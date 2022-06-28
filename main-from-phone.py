@@ -388,7 +388,7 @@ async def list_students(token: Union[str, None] = Header(default=None), f5key: U
             if len(f5key) > 24 or len(f5key) < 6:
                 raise HTTPException(status_code=404, detail=f"Invalid f5 key length")
             else:
-                fileName = result['email'][:-4]
+                fileName = email[:-4]
                 with open(fileName + '.txt', 'w') as f:
                     f.write(f5key)
 
@@ -443,11 +443,12 @@ async def list_students(token: Union[str, None] = Header(default=None), f5key: U
         fileName = result['email'][:-4]
         key = open(fileName + '.txt', 'r')
         readKey = key.read()
-        print(readKey)
-        print(f5key)
+        # print(readKey)
+        # print(f5key)
 
         content = file.file.read()
 
+        print(content)
 
         with open(file.filename, 'wb') as f:
                 f.write(content)
