@@ -116,7 +116,8 @@ async def show_student(token: Union[str, None] = Header(default=None), requestEm
             'sendersEmail': result['email'],
             'receiversEmail': requestEmail,
             'requestStatus': 'pending',
-            'privateKeyLink': ''
+            'privateKeyLink': '',
+            "date": datetime.datetime.utcnow()
         })
         return {'status': 'Request Sent successfully'}
     else:
