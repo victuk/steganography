@@ -244,14 +244,17 @@ async def generate_keys(token: Union[str, None] = Header(default=None), keyLengt
         with open('static/publicKey.pem', 'rb') as publicfile:
             publicKeydata = publicfile.read()
 
-        publicKeyMessage = 'Public Key to encrypt messages'
+        studentD = await db["students"].find_one({"email": payload['email']})
+        user = await db["students"].find_one({"email": keyLength['PKReceiversEmail']})
 
-        privateKeyMessage = 'Private Key to decrypt messages'
+        publicKeyMessage = '{} has sent you a public Key for message encryption.'.format(studentD['username'])
+
+        privateKeyMessage = 'You have sent a public key to {}. Here is your private Key to decrypt messages'.format(user['username'])
 
         print('Sender', payload['email'])
         print('Receiver', keyLength['PKReceiversEmail'])
 
-        sendMailWithFile(payload['email'], keyLength['PKReceiversEmail'], publicKeyMessage, 'Public Key File', 'static/publicKey.pem')
+        sendMailWithFile(payload['email'], keyLength['PKReceiversEmail'], 'Public Key File', publicKeyMessage, 'static/publicKey.pem')
 
         pk_response = cloudinary.uploader.upload("static/publicKey.pem", resource_type="raw")
 
@@ -265,7 +268,7 @@ async def generate_keys(token: Union[str, None] = Header(default=None), keyLengt
             'pkPublicId': pk_response['public_id']
         })
 
-        sendMailWithFile(payload['email'], payload['email'], privateKeyMessage, 'Private Key File', 'static/privateKey.pem')
+        sendMailWithFile(payload['email'], payload['email'], 'Private Key File', privateKeyMessage, 'static/privateKey.pem')
         
         # sendMail(payload['email'], keyLength['PKReceiversEmail'], privateKeyMessage, str(privateKeydata)[2:-1])
 
