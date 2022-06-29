@@ -2,6 +2,7 @@ from ast import Not
 from email import message
 import json
 import os
+import datetime
 import resource
 from fastapi import FastAPI, Body, HTTPException, status, Header, UploadFile, File, Form
 from fastapi.responses import JSONResponse
@@ -265,7 +266,8 @@ async def generate_keys(token: Union[str, None] = Header(default=None), keyLengt
             'email': keyLength['PKReceiversEmail'],
             'sendersEmail': result['email'],
             'pkLink': pk_response['secure_url'],
-            'pkPublicId': pk_response['public_id']
+            'pkPublicId': pk_response['public_id'],
+            "date": datetime.datetime.utcnow()
         })
 
         sendMailWithFile(payload['email'], payload['email'], 'Private Key File', privateKeyMessage, 'static/privateKey.pem')
@@ -415,7 +417,8 @@ async def list_students(token: Union[str, None] = Header(default=None), f5key: U
                 'email': email,
                 'sendersEmail': result['email'],
                 'pkLink': pk_response['secure_url'],
-                'pkPublicId': pk_response['public_id']
+                'pkPublicId': pk_response['public_id'],
+                "date": datetime.datetime.utcnow()
             })
 
             pk_response_two = cloudinary.uploader.upload(fileName + '.txt', resource_type="raw")
@@ -427,7 +430,8 @@ async def list_students(token: Union[str, None] = Header(default=None), f5key: U
                 'email': email,
                 'sendersEmail': result['email'],
                 'pkLink': pk_response_two['secure_url'],
-                'pkPublicId': pk_response_two['public_id']
+                'pkPublicId': pk_response_two['public_id'],
+                "date": datetime.datetime.utcnow()
             })
 
             sendMailTwo(result['email'], result['email'], 'Your f5 key', messageTwo)
