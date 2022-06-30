@@ -117,7 +117,7 @@ async def show_student(token: Union[str, None] = Header(default=None), requestEm
             'receiversEmail': requestEmail,
             'requestStatus': 'pending',
             'privateKeyLink': '',
-            "date": datetime.datetime.utcnow()
+            "date": datetime.datetime.now()
         })
         return {'status': 'Request Sent successfully'}
     else:
@@ -268,7 +268,7 @@ async def generate_keys(token: Union[str, None] = Header(default=None), keyLengt
             'sendersEmail': result['email'],
             'pkLink': pk_response['secure_url'],
             'pkPublicId': pk_response['public_id'],
-            "date": datetime.datetime.utcnow()
+            "date": datetime.datetime.now()
         })
 
         sendMailWithFile(payload['email'], payload['email'], 'Private Key File', privateKeyMessage, 'static/privateKey.pem')
@@ -419,7 +419,7 @@ async def list_students(token: Union[str, None] = Header(default=None), f5key: U
                 'sendersEmail': result['email'],
                 'pkLink': pk_response['secure_url'],
                 'pkPublicId': pk_response['public_id'],
-                "date": datetime.datetime.utcnow()
+                "date": datetime.datetime.now()
             })
 
             pk_response_two = cloudinary.uploader.upload(fileName + '.txt', resource_type="raw")
@@ -432,7 +432,7 @@ async def list_students(token: Union[str, None] = Header(default=None), f5key: U
                 'sendersEmail': result['email'],
                 'pkLink': pk_response_two['secure_url'],
                 'pkPublicId': pk_response_two['public_id'],
-                "date": datetime.datetime.utcnow()
+                "date": datetime.datetime.now()
             })
 
             sendMailTwo(result['email'], result['email'], 'Your f5 key', messageTwo)
