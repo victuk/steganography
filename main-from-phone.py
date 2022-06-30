@@ -547,7 +547,7 @@ async def show_student(token: Union[str, None] = Header(default=None), f5key: Un
     result = check(token)
     if result is not None:
         fileName = result['email'][:-4]
-        key = open(fileName + '.txt', 'r')
+        key = open(fileName + 'forImg' + '.txt', 'r')
         readKey = key.read()
 
         print(key)
