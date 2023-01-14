@@ -17,7 +17,7 @@ httptools==0.4.0
 idna==3.3
 motor==3.0.0
 mysql-connector-python==8.0.29
-numpy==1.22.4
+numpy==1.21.6
 opencv-python==4.5.5.64
 Pillow==9.1.1
 protobuf==4.21.1
