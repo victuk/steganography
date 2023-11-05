@@ -16,8 +16,6 @@ h11==0.13.0
 httptools==0.4.0
 idna==3.3
 motor==3.0.0
-mysql-connector-python==8.0.29
-numpy==1.22
 opencv-python==4.5.5.64
 Pillow==10.0.1
 protobuf==4.21.6
@@ -25,7 +23,6 @@ pyasn1==0.4.8
 pycparser==2.21
 pycryptodomex==3.14.1
 pydantic==1.9.1
-pymongo==4.1.1
 python-dotenv==0.20.0
 python-multipart==0.0.5
 PyYAML==6.0
@@ -33,11 +30,9 @@ requests==2.31.0
 rsa==4.8
 six==1.16.0
 sniffio==1.2.0
-SQLAlchemy==1.4.37
 stepic==0.5.0
 typing-extensions==4.2.0
 urllib3==1.26.18
 uvicorn==0.17.6
 uvloop==0.16.0
 watchgod==0.8.2
-websockets==10.3
