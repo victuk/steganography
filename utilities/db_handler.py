@@ -1,6 +1,7 @@
 import motor.motor_asyncio as mongo_motor
-from dotenv import dotenv_values
-env_vars = dotenv_values(".env")
+from dotenv import load_dotenv
+import os
+load_dotenv()
 
-client = mongo_motor.AsyncIOMotorClient(env_vars["MONGO_DB_URL"])
+client = mongo_motor.AsyncIOMotorClient(os.getenv("MONGO_DB_URL"))
 db = client["steg"]

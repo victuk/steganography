@@ -1,4 +1,3 @@
-from dotenv import dotenv_values
 from fastapi import APIRouter, Header, HTTPException, UploadFile, File, Depends
 from typing import Union
 from utilities.db_handler import db
@@ -12,7 +11,6 @@ from utilities.hideImageInImage import merge, unmerge
 from PIL import Image
 
 image_manipulation_router = APIRouter()
-env_vars = dotenv_values(".env")
 
 
 @image_manipulation_router.post(

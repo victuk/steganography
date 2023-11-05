@@ -1,4 +1,3 @@
-from dotenv import dotenv_values
 from utilities.db_handler import db
 from fastapi import APIRouter, Header, HTTPException, Depends
 from typing import Union
@@ -6,12 +5,7 @@ from base_models.models import ShowProfile
 from dependencies.checkLogin import check
 
 
-
-
 user_router = APIRouter()
-env_vars = dotenv_values(".env")
-
-
 
 
 @user_router.get(

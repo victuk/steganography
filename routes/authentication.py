@@ -3,17 +3,18 @@ from fastapi.encoders import jsonable_encoder
 from base_models.models import StudentModel, StudentModelReply, LoginModel, ShowSuccess
 from fastapi.responses import JSONResponse
 from utilities.passwordUtil import hash_password, verify_password
-from dotenv import dotenv_values
+from dotenv import load_dotenv
 from utilities.db_handler import db
 import jwt
 from typing import Union
 import cryptocode
 from utilities.sendEmail import sendHTML
 from utilities import passwordUtil
+import os
 
+load_dotenv()
 
 authentication_router = APIRouter()
-env_vars = dotenv_values(".env")
 
 
 @authentication_router.post(
@@ -46,7 +47,7 @@ async def logs_in_the_user(student: LoginModel = Body(...)):
         passwordMatch = verify_password(student['password'], studentD['password'])
         if passwordMatch == True:
             print('Passwords match')
-            token = jwt.encode({'studentID':studentD['_id'], 'email':studentD['email']}, env_vars["jwtSecret"], algorithm="HS256")
+            token = jwt.encode({'studentID':studentD['_id'], 'email':studentD['email']}, os.getenv("jwtSecret"), algorithm="HS256")
             print(token.decode())
             return {'_id': studentD['_id'], 'username': studentD['username'], 'email': studentD['email'], 'token':token.decode()}
         else:
@@ -68,7 +69,7 @@ async def sends_a_forgot_password_email(email: Union[str, None] = Header(default
 
     if studentS is not None:
 
-        encode = cryptocode.encrypt(email, env_vars["jwtSecret"])
+        encode = cryptocode.encrypt(email, os.getenv("jwtSecret"))
 
         message = 'Kindly click this button to reset your password: <div><a href="https://infocryptpro.netlify.app/reset-password.html?key=' + encode + '" target="_blank">Reset Button</a></div><br> \
         <div>You can use this link if the button is not working: https://infocryptpro.netlify.app/reset-password?key=' + encode + '</div>'
@@ -86,7 +87,7 @@ async def sends_a_forgot_password_email(email: Union[str, None] = Header(default
     response_model=ShowSuccess
 )
 def resets_the_users_password(newPassword: Union[str, None] = Header(default=None), key: Union[str, None] = Header(default=None)):
-    email = cryptocode.decrypt(key, env_vars["jwtSecret"])
+    email = cryptocode.decrypt(key, os.getenv("jwtSecret"))
 
     newPassword = passwordUtil.hash_password(newPassword)
 

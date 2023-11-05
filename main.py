@@ -2,16 +2,17 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 import cloudinary
-import cloudinary.uploader
-import cloudinary.api
+# import cloudinary.uploader
+# import cloudinary.api
+import os
 import uvicorn
-from dotenv import dotenv_values
+from dotenv import dotenv_values, load_dotenv
 from routes.authentication import authentication_router
 from routes.encrypt_decrypt_text import text_manipulation_router
 from routes.image_manipulation_routes import image_manipulation_router
 from routes.keys_route import keys_router
 from routes.user_profile import user_router
-
+load_dotenv()
 
 
 app = FastAPI(
@@ -20,11 +21,10 @@ app = FastAPI(
         encrypt text before hiding inside an image, seperate image from image, seperate image from text, decrypt text, etc."
 )
 env_vars = dotenv_values(".env")
-
 cloudinary.config( 
-  cloud_name = env_vars["cloudinary_api_name"], 
-  api_key = env_vars["cloudinary_api_key"], 
-  api_secret = env_vars["cloudinary_api_secret"],
+  cloud_name = os.getenv("cloudinary_api_name"), 
+  api_key = os.getenv("cloudinary_api_key"), 
+  api_secret = os.getenv("cloudinary_api_secret"),
   secure = True
 )
 
@@ -77,4 +77,4 @@ app.include_router(
 )
 
 if __name__ == "__main__":
-    uvicorn.run("main:app", host="0.0.0.0", port=int(env_vars["PORT"]), reload=True)
+    uvicorn.run("main:app", host="0.0.0.0", port=int(os.getenv("PORT")), reload=True)

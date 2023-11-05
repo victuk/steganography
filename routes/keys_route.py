@@ -1,5 +1,4 @@
 from fastapi import APIRouter, Header, HTTPException, Depends, Body
-from dotenv import dotenv_values
 from base_models.models import ShowSuccess, Req, Check, responseWithPrivateKey, responseWithKey
 from typing import Union
 from datetime import datetime
@@ -12,7 +11,6 @@ from utilities.sendEmail import sendMailWithFile
 
 
 keys_router = APIRouter()
-env_vars = dotenv_values(".env")
 
 
 

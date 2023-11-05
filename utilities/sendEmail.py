@@ -12,10 +12,10 @@ from email.utils import COMMASPACE, formatdate
 from email.mime.base import MIMEBase
 import textwrap
 from email.mime.image import MIMEImage
-from dotenv import dotenv_values
+from dotenv import load_dotenv
 
 
-env_vars = dotenv_values(".env")
+load_dotenv()
 
 def sendMail(sendFrom, to, subject, message):
     
@@ -32,7 +32,7 @@ def sendMail(sendFrom, to, subject, message):
     server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
 
     # server.starttls(context=context) # Secure the connection
-    server.login(env_vars["smtp_email"], env_vars["smtp_password"])
+    server.login(os.getenv("smtp_email"), os.getenv("smtp_password"))
     server.sendmail(sendFrom, to, message)
     server.quit()
 
@@ -48,7 +48,7 @@ def sendMailTwo(sendFrom, to, subject, message):
     server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
 
     # server.starttls(context=context) # Secure the connection
-    server.login(env_vars["smtp_email"], env_vars["smtp_password"])
+    server.login(os.getenv("smtp_email"), os.getenv("smtp_password"))
     server.sendmail(sendFrom, to, msg.as_string())
     server.quit()
 
@@ -64,7 +64,7 @@ def sendHTML(sendFrom, to, subject, message):
     server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
 
     # server.starttls(context=context) # Secure the connection
-    server.login(env_vars["smtp_email"], env_vars["smtp_password"])
+    server.login(os.getenv("smtp_email"), os.getenv("smtp_password"))
     server.sendmail(sendFrom, to, msg.as_string())
     server.quit()
 
@@ -86,7 +86,7 @@ def sendMailWithAttachment(sendFrom, to, subject, message, attachmentURL):
     server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
 
     # server.starttls(context=context) # Secure the connection
-    server.login(env_vars["smtp_email"], env_vars["smtp_password"])
+    server.login(os.getenv("smtp_email"), os.getenv("smtp_password"))
     server.sendmail(sendFrom, to, msg.as_string())
     server.quit()
 
@@ -119,6 +119,6 @@ def sendMailWithFile(sendFrom, to, subject, message, attachmentURL):
     msg.attach(part)
 
     # server.starttls(context=context) # Secure the connection
-    server.login(env_vars["smtp_email"], env_vars["smtp_password"])
+    server.login(os.getenv("smtp_email"), os.getenv("smtp_password"))
     server.sendmail(sendFrom, to, msg.as_string())
     server.quit()

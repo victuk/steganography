@@ -1,4 +1,3 @@
-from dotenv import dotenv_values
 from utilities.db_handler import db
 import jwt
 from fastapi import APIRouter, HTTPException, Header, UploadFile, File, Depends
@@ -9,8 +8,6 @@ import base64
 from dependencies.checkLogin import check
 
 text_manipulation_router = APIRouter()
-env_vars = dotenv_values(".env")
-
 
 
 @text_manipulation_router.post(
