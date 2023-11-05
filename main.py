@@ -76,5 +76,9 @@ app.include_router(
     prefix="/v1/user"
 )
 
+@app.get("/")
+def say_hello():
+    return "Hello there, I'm live"
+
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port=int(os.getenv("PORT")), reload=True)
